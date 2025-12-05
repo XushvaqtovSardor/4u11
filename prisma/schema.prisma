@@ -80,3 +80,16 @@ model Group{
   @@unique([courseId,name])
   @@map("groups")
 }
+model Teacher{
+  id Int @id @default(autoincrement())
+  fullName String
+  photo String?
+  email String @unique
+  photo String @unique
+  password String
+  
+  branchId Int
+  status Status @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime? @updatedAt
+}
