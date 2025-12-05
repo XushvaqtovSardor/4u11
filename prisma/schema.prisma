@@ -1,0 +1,82 @@
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated"
+  
+}
+enum Status{
+  ACTIVE
+  INACTIVE
+}
+enum CourseLevel{
+  Beginner
+  Intermediate
+  advanced
+}
+
+model Branch{
+  id Int @id @default(autoincrement())
+  name String @unique
+  logo String?
+  address String
+  status Status @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  rooms Room[]
+  courses Course[] 
+  groups Group[]
+  @@map("branches")
+
+}
+model Room{
+  id Int @id @default(autoincrement())
+  name String @unique
+  capacity Int
+  branchId Int
+  status Status @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branch Branch @relation(fields:[branchId],references:[id])
+}
+model Course{
+  id Int @id @default(autoincrement())
+  name String @unique 
+  price Decimal @db.Decimal(10,2)
+  durationMonth Int
+  durationHours Float
+  level CourseLevel
+  branchId Int
+  status Status @default(ACTIVE)
+
+  branch Branch @relation(fields:[branchId],references:[id])
+  groups Group[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model Group{
+  id Int @id @default(autoincrement())
+  name String @unique
+  courseId Int
+  branchId Int
+  roomId Int
+  startDate DateTime
+  startLesson DateTime
+  endDate DateTime
+  status Status @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime? @updatedAt
+
+  course Course @relation(fields:[courseId] references:[id])
+  branch Branch @relation(fields:[branchId],references:[id])
+  roomId Room @relation(fields:[roomId],references:[id])
+
+
+  @@unique([courseId,name])
+  @@map("groups")
+}
