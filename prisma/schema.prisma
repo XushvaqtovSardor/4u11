@@ -13,10 +13,26 @@ enum Status{
   ACTIVE
   INACTIVE
 }
+enum EventType{
+  ASSIGNED
+  REMOVED
+  LEFT
+  TEMPORARY_ASSIGNMENT
+  VACATION
+  ONLINE_ASSIGNMENT
+
+}
 enum CourseLevel{
   Beginner
   Intermediate
-  advanced
+  Advanced
+}
+enum StaffRole{
+  Teacher
+  SuperAdmin
+  Admin
+  Student
+
 }
 
 model Branch{
@@ -27,10 +43,18 @@ model Branch{
   status Status @default(ACTIVE)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
   rooms Room[]
+  teachers Teacher[]
   courses Course[] 
   groups Group[]
+
+  teacherGroups TeacherGroup[]
+  studentGroups StudentGroup[]
+
   @@map("branches")
+  @@unique([name])
+  @@index([status])
 
 }
 model Room{
@@ -39,10 +63,15 @@ model Room{
   capacity Int
   branchId Int
   status Status @default(ACTIVE)
+  deletedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   branch Branch @relation(fields:[branchId],references:[id])
+
+  @@unique([branchId,name])
+  @@index([branchId])
+  @@check("capacity>0")
 }
 model Course{
   id Int @id @default(autoincrement())
@@ -54,46 +83,183 @@ model Course{
   branchId Int
   status Status @default(ACTIVE)
 
-  branch Branch @relation(fields:[branchId],references:[id])
-  groups Group[]
+  deletedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  branch Branch @relation(fields:[branchId],references:[id])
+  groups Group[]
+
+  @@unique([branchId,name])
+  @@index([branchId])
+  @@index([level,status])
 }
 model Group{
   id Int @id @default(autoincrement())
   name String @unique
-  courseId Int
+  courses Course[]
   branchId Int
   roomId Int
   startDate DateTime
   startLesson DateTime
   endDate DateTime
   status Status @default(ACTIVE)
+
+  deletedAt DateTime?
   createdAt DateTime @default(now())
-  updatedAt DateTime? @updatedAt
+  updatedAt DateTime @updatedAt
 
-  course Course @relation(fields:[courseId] references:[id])
+  course Course @relation(fields:[courses], references:[id])
   branch Branch @relation(fields:[branchId],references:[id])
-  roomId Room @relation(fields:[roomId],references:[id])
+  room Room @relation(fields:[roomId],references:[id])
 
+  teachers TeacherGroup[]
+  students StudentGroup[]
 
-  @@unique([courseId,name])
+  teacherGroupHistory TeacherGroupHistory[]
+  studentGroupHistory StudentGroupHistory[]
+
   @@map("groups")
+  @@unique([branchId,name])
+  @@index([branchId,status])
+  @@check("startLesson>=startDate AND endDate>=startLesson")
 }
 model Teacher{
   id Int @id @default(autoincrement())
   fullName String
   photo String?
   email String @unique
-  photo String @unique
   password String
-  
   branchId Int
   status Status @default(ACTIVE)
+
+  deletedAt DateTime?
   createdAt DateTime @default(now())
-  updatedAt DateTime? @updatedAt
+  updatedAt DateTime @updatedAt
+  
+  branch Branch @relation(fields:[branchId],references:[id])
+  teacherGroups TeacherGroup[]
+  teacherGroupHistory TeacherGroupHistory[]
+
+  @@index([branchId,status])
 }
 model TeacherGroup{
+  id Int @id @default(autoincrement())
   teacherId Int
   branches Int
+  groupId Int
+  status Status @default(ACTIVE)
+
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  teacher Teacher @relation(fields:[teacherId],references:[id])
+  group Group @relation(fields:[groupId],references:[id])
+  branch Branch @relation(fields:[branchId],references:[id])
+
+  history TeacherGroupHistory[]
+
+  @@unique([teacherId,groupId,branchId])
+  @@index([teacherId,status])
+  @@index([groupId,status])
+
+  @@map("teacher_groups")
+
+}
+model TeacherGroupHistory{
+  id Int @id default(autoincrement())
+  teacherGroupId Int
+  event EventType
+  startDate DateTime
+  endDate DateTime?
+  createdAt DateTime @default(now())
+
+  teacherGroup TeacherGroup @relation(fields:[teacherGroupId],references:[id])
+  @map("teacher_group_history")
+  @index([teacherGroupId])
+}
+model Student{
+  id Int @id @default(autoincrement())
+  fullName String
+  photo String?
+  email String @unique
+  phone String
+  status Status @default(ACTIVE)
+  branchId Int
+
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime? @updatedAt
+
+  branch Branch @relation(fields:[branchId],references:[id])
+  groups StudentGroup[]
+  history StudentGroupHistory[]
+ 
+ @@index([branchId,status])
+}
+model StudentGroup{
+  id Int @id @default(autoincrement())
+  studentId Int
+  groupId Int
+  branchId Int
+  status Status @default(ACTIVE)
+
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime? @updatedAt
+
+  group Group @relation(fields:[groupId],references:[id])
+  branch Branch @relation(fields:[branchId],references:[id])
+  student Student @relation(fields:[studentId],references:[id])
+
+  history StudentGroupHistory[]
+
+  @@unique([studentId,groupId,branchId])
+  @@index([studentId,status])
+  @@index([groupId,status])
+  @@map("student_groups")
+}
+model StudentGroupHistory{
+  id @id @default(autoincrement())
+  studentGroupId Int
+  event EventType
+  startDate DateTime
+  endDate DateTime?
+  createdAt DateTime @default(now())
+
+  studentGroup StudentGroup @relation(fields:[studentGroupId],references:[id])
+  @map("student_group_history")
+  @@index([studentGroupId])
+}
+model Staff{
+  id Int @id @default(autoincrement())
+  fullName String
+  phone String 
+  photo String?
+  role StaffRole
+  branchId Int?
+  status Status @default(ACTIVE)
+
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branch Branch @relation(fields:[branchId],references:[id])
+  permissions Permission[]
+  @@index([branchId,role])
+}
+model Permission{
+  id Int @id @default(autoincrement())
+  staffId Int
+  tableName String
+  canRead Boolean @default(false)
+  canWrite Boolean @default(false)
+  canUpdate Boolean @default(false)
+  canDelete Boolean @default(false)
+
+  staff Staff @relation(fields:[staffId],references:[id])
+
+  @unique([staffId,tableName])
+  @@index([staffId])
 }
