@@ -11,10 +11,14 @@ import {
 import { BranchService } from './branch.service';
 import { CreateBranchDto } from './dto/create-branch.dto';
 import { UpdateBranchDto } from './dto/update-branch.dto';
+import { MailService } from 'src/common/email/mailer.service';
 
 @Controller('branches')
 export class BranchController {
-  constructor(private readonly branchService: BranchService) {}
+  constructor(
+    private readonly branchService: BranchService,
+    private readonly mailService: MailService,
+  ) {}
 
   @Post()
   create(@Body() createBranchDto: CreateBranchDto) {
@@ -22,7 +26,8 @@ export class BranchController {
   }
 
   @Get()
-  findAll() {
+  async findAll() {
+    await this.mailService.sendEmail('gaday078@gmail.com', 123456);
     return this.branchService.findAll();
   }
 
