@@ -1,13 +1,9 @@
-
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated"
-  
+  provider = "prisma-client-js"
 }
 enum Status{
   ACTIVE
@@ -37,7 +33,7 @@ enum StaffRole{
 
 model Branch{
   id Int @id @default(autoincrement())
-  name String @unique
+  name String 
   logo String?
   address String
   status Status @default(ACTIVE)
@@ -48,6 +44,8 @@ model Branch{
   teachers Teacher[]
   courses Course[] 
   groups Group[]
+  students Student[]
+  staff Staff[]
 
   teacherGroups TeacherGroup[]
   studentGroups StudentGroup[]
@@ -68,10 +66,10 @@ model Room{
   updatedAt DateTime @updatedAt
 
   branch Branch @relation(fields:[branchId],references:[id])
+  groups Group[]
 
   @@unique([branchId,name])
   @@index([branchId])
-  @@check("capacity>0")
 }
 model Course{
   id Int @id @default(autoincrement())
@@ -97,9 +95,10 @@ model Course{
 model Group{
   id Int @id @default(autoincrement())
   name String @unique
-  courses Course[]
+ 
   branchId Int
   roomId Int
+  courseId Int
   startDate DateTime
   startLesson DateTime
   endDate DateTime
@@ -108,8 +107,7 @@ model Group{
   deletedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  course Course @relation(fields:[courses], references:[id])
+  course Course @relation(fields:[courseId], references:[id])
   branch Branch @relation(fields:[branchId],references:[id])
   room Room @relation(fields:[roomId],references:[id])
 
@@ -122,7 +120,7 @@ model Group{
   @@map("groups")
   @@unique([branchId,name])
   @@index([branchId,status])
-  @@check("startLesson>=startDate AND endDate>=startLesson")
+
 }
 model Teacher{
   id Int @id @default(autoincrement())
@@ -146,7 +144,7 @@ model Teacher{
 model TeacherGroup{
   id Int @id @default(autoincrement())
   teacherId Int
-  branches Int
+  branchId Int
   groupId Int
   status Status @default(ACTIVE)
 
@@ -168,16 +166,21 @@ model TeacherGroup{
 
 }
 model TeacherGroupHistory{
-  id Int @id default(autoincrement())
+  id Int @id @default(autoincrement())
   teacherGroupId Int
+  teacherId Int
+  groupId Int
   event EventType
   startDate DateTime
   endDate DateTime?
   createdAt DateTime @default(now())
 
   teacherGroup TeacherGroup @relation(fields:[teacherGroupId],references:[id])
-  @map("teacher_group_history")
-  @index([teacherGroupId])
+  teacher Teacher @relation(fields:[teacherId],references:[id])
+  group Group @relation(fields:[groupId],references:[id])
+
+  @@map("teacher_group_history")
+  @@index([teacherGroupId])
 }
 model Student{
   id Int @id @default(autoincrement())
@@ -190,13 +193,13 @@ model Student{
 
   deletedAt DateTime?
   createdAt DateTime @default(now())
-  updatedAt DateTime? @updatedAt
+  updatedAt DateTime @updatedAt
 
   branch Branch @relation(fields:[branchId],references:[id])
   groups StudentGroup[]
   history StudentGroupHistory[]
- 
- @@index([branchId,status])
+
+  @@index([branchId,status])
 }
 model StudentGroup{
   id Int @id @default(autoincrement())
@@ -221,15 +224,20 @@ model StudentGroup{
   @@map("student_groups")
 }
 model StudentGroupHistory{
-  id @id @default(autoincrement())
+  id Int @id @default(autoincrement())
   studentGroupId Int
+  studentId Int
+  groupId Int
   event EventType
   startDate DateTime
   endDate DateTime?
   createdAt DateTime @default(now())
 
   studentGroup StudentGroup @relation(fields:[studentGroupId],references:[id])
-  @map("student_group_history")
+  student Student @relation(fields:[studentId],references:[id])
+  group Group @relation(fields:[groupId],references:[id])
+
+  @@map("student_group_history")
   @@index([studentGroupId])
 }
 model Staff{
@@ -245,7 +253,7 @@ model Staff{
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  branch Branch @relation(fields:[branchId],references:[id])
+  branch Branch? @relation(fields:[branchId],references:[id])
   permissions Permission[]
   @@index([branchId,role])
 }
@@ -260,6 +268,6 @@ model Permission{
 
   staff Staff @relation(fields:[staffId],references:[id])
 
-  @unique([staffId,tableName])
+  @@unique([staffId,tableName])
   @@index([staffId])
 }
