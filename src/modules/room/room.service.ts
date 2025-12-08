@@ -1,26 +1,55 @@
 import { Injectable } from '@nestjs/common';
-import { CreateRoomDto } from './dto/create-room.dto';
-import { UpdateRoomDto } from './dto/update-room.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { Room, Status } from 'prisma/generated';
 
 @Injectable()
 export class RoomService {
-  create(createRoomDto: CreateRoomDto) {
-    return 'This action adds a new room';
+  constructor(private prisma: PrismaService) {}
+  create(data: {
+    name: string;
+    capacity: number;
+    branchId: number;
+    status?: Status;
+  }): Promise<Room> {
+    return this.prisma.room.create({ data });
   }
 
-  findAll() {
-    return `This action returns all room`;
+  findAll(): Promise<Room[]> {
+    return this.prisma.room.findMany({
+      where: { deletedAt: null },
+      include: { branch: true, groups: true },
+    });
+  }
+  findOne(id: number): Promise<Room | null> {
+    return this.prisma.room.findUnique({
+      where: { id },
+      include: { branch: true, groups: true },
+    });
+  }
+  update(
+    id: number,
+    data: {
+      name?: string;
+      capacity?: number;
+      branchId?: number;
+      status?: Status;
+    },
+  ): Promise<Room> {
+    return this.prisma.room.update({
+      where: { id },
+      data,
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} room`;
+  remove(id: number): Promise<Room> {
+    return this.prisma.room.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
   }
-
-  update(id: number, updateRoomDto: UpdateRoomDto) {
-    return `This action updates a #${id} room`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} room`;
+  delete(id: number): Promise<Room> {
+    return this.prisma.room.delete({
+      where: { id },
+    });
   }
 }
