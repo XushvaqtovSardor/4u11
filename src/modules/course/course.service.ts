@@ -2,13 +2,13 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Course } from 'prisma/generated';
+import { Course } from 'src/prisma/generated';
 
 @Injectable()
 export class CourseService {
   constructor(private readonly prisma: PrismaService) {}
   async create(dto: CreateCourseDto): Promise<Course> {
-    return this.prisma.course.create({ dto });
+    return this.prisma.course.create({ data: dto });
   }
 
   async findAll(): Promise<Course[]> {
@@ -23,25 +23,26 @@ export class CourseService {
       where: { id },
       include: { branch: true, groups: true },
     });
-    if (!course) throw new NotFoundException(`Course not exits`);
+    if (!course || course.deletedAt)
+      throw new NotFoundException(`Course not found`);
     return course;
   }
 
   async update(id: number, dto: UpdateCourseDto): Promise<Course> {
     const course = await this.prisma.course.findFirst({
-      where: { id },
+      where: { id, deletedAt: null },
     });
     if (!course) throw new NotFoundException(`Course ${id} not found`);
     return this.prisma.course.update({
       where: { id },
-      dto,
+      data: dto,
     });
   }
 
   async remove(id: number) {
-    const exist = await this.prisma.course.findUnique({ where: { id } });
-    if (!exist) {
-      throw new NotFoundException(`course with ${id} not found`);
+    const course = await this.prisma.course.findUnique({ where: { id } });
+    if (!course || course.deletedAt) {
+      throw new NotFoundException(`Course with id ${id} not found`);
     }
     return this.prisma.course.update({
       where: { id },

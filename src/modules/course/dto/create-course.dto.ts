@@ -1,5 +1,5 @@
-import { IsNumber, IsOptional, IsString, Min } from 'class-validator';
-import { Status } from 'prisma/generated';
+import { IsEnum, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { Status, CourseLevel } from '@prisma/client';
 
 export class CreateCourseDto {
   @IsString()
@@ -10,17 +10,20 @@ export class CreateCourseDto {
   price: number;
 
   @IsNumber()
+  @Min(1)
   durationMonth: number;
 
   @IsNumber()
+  @Min(1)
   durationHours: number;
 
-  @IsString()
-  level: string;
+  @IsEnum(CourseLevel)
+  level: CourseLevel;
 
   @IsNumber()
   branchId: number;
 
   @IsOptional()
+  @IsEnum(Status)
   status?: Status;
 }
