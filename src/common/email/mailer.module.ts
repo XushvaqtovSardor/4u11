@@ -1,4 +1,3 @@
-// src/mail/mailer.module.ts
 import { Global, Module } from '@nestjs/common';
 import { MailerModule as NestModelMailer } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';

@@ -9,10 +9,12 @@ import { GroupModule } from './modules/group/group.module';
 import { TeacherModule } from './modules/teacher/teacher.module';
 import { StudentModule } from './modules/student/student.module';
 import { StaffModule } from './modules/staff/staff.module';
+import { EmailModule } from './common/email/email.module';
 
 @Module({
   imports: [
     PrismaModule,
+    EmailModule,
     BranchModule,
     RoomModule,
     CourseModule,

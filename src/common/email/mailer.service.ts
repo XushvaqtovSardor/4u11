@@ -7,17 +7,17 @@ export class MailService {
   private generateOTP(length = 6): number {
     let otp = '';
     for (let i = 0; i < length; i++) {
-      otp += Math.floor(Math.random() * 10); // 0-9 raqam
+      otp += Math.floor(Math.random() * 10);
     }
     return Number(otp);
   }
   async sendEmail(email: string, code: number) {
-    const otp =this.generateOTP
-     await this.mailerService.sendMail({
+    const otp = this.generateOTP();
+    await this.mailerService.sendMail({
       to: email,
       subject: 'Your Verification Code',
       template: 'index',
-      context: { code },
+      context: { code: otp },
     });
   }
 }
