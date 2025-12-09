@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { StaffService } from './staff.service';
 import { CreateStaffDto } from './dto/create-staff.dto';
 import { UpdateStaffDto } from './dto/update-staff.dto';
@@ -8,8 +17,8 @@ export class StaffController {
   constructor(private readonly staffService: StaffService) {}
 
   @Post()
-  create(@Body() createStaffDto: CreateStaffDto) {
-    return this.staffService.create(createStaffDto);
+  create(@Body() dto: CreateStaffDto) {
+    return this.staffService.create(dto);
   }
 
   @Get()
@@ -18,17 +27,17 @@ export class StaffController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.staffService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.staffService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateStaffDto: UpdateStaffDto) {
-    return this.staffService.update(+id, updateStaffDto);
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateStaffDto) {
+    return this.staffService.update(id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.staffService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.staffService.remove(id);
   }
 }

@@ -25,7 +25,8 @@ export class RoomService {
       include: { branch: true, groups: true },
     });
     if (!room || room.deletedAt) {
-      throw new NotFoundException(`Room with id ${id} not found`);\n    }
+      throw new NotFoundException(`Room with id ${id} not found`);
+    }
     return room;
   }
 
@@ -42,11 +43,6 @@ export class RoomService {
     return this.prisma.room.update({
       where: { id },
       data: { deletedAt: new Date() },
-    });
-  }
-}
-    return this.prisma.room.delete({
-      where: { id },
     });
   }
 }
