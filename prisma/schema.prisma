@@ -1,0 +1,285 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+enum Status{
+  ACTIVE
+  INACTIVE
+}
+enum EventType{
+  ASSIGNED
+  REMOVED
+  LEFT
+  TEMPORARY_ASSIGNMENT
+  VACATION
+  ONLINE_ASSIGNMENT
+
+}
+enum CourseLevel{
+  Beginner
+  Intermediate
+  Advanced
+}
+enum StaffRole{
+  Teacher
+  SuperAdmin
+  Admin
+  Student
+
+}
+
+model Branch{
+  id Int @id @default(autoincrement())
+  name String 
+  logo String?
+  address String
+  status Status @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rooms Room[]
+  teachers Teacher[]
+  courses Course[] 
+  groups Group[]
+  students Student[]
+  staff Staff[]
+
+  teacherGroups TeacherGroup[]
+  studentGroups StudentGroup[]
+
+  @@map("branches")
+  @@unique([name])
+  @@index([status])
+
+}
+model Room{
+  id Int @id @default(autoincrement())
+  name String @unique
+  capacity Int
+  branchId Int
+  status Status @default(ACTIVE)
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branch Branch @relation(fields:[branchId],references:[id])
+  groups Group[]
+
+  @@unique([branchId,name])
+  @@index([branchId])
+}
+model Course{
+  id Int @id @default(autoincrement())
+  name String @unique 
+  price Decimal @db.Decimal(10,2)
+  durationMonth Int
+  durationHours Float
+  level CourseLevel
+  branchId Int
+  status Status @default(ACTIVE)
+
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branch Branch @relation(fields:[branchId],references:[id])
+  groups Group[]
+
+  @@unique([branchId,name])
+  @@index([branchId])
+  @@index([level,status])
+}
+model Group{
+  id Int @id @default(autoincrement())
+  name String @unique
+ 
+  branchId Int
+  roomId Int
+  courseId Int
+  startDate DateTime
+  startLesson DateTime
+  endDate DateTime
+  status Status @default(ACTIVE)
+
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  course Course @relation(fields:[courseId], references:[id])
+  branch Branch @relation(fields:[branchId],references:[id])
+  room Room @relation(fields:[roomId],references:[id])
+
+  teachers TeacherGroup[]
+  students StudentGroup[]
+
+  teacherGroupHistory TeacherGroupHistory[]
+  studentGroupHistory StudentGroupHistory[]
+
+  @@map("groups")
+  @@unique([branchId,name])
+  @@index([branchId,status])
+
+}
+model Teacher{
+  id Int @id @default(autoincrement())
+  fullName String
+  photo String?
+  email String @unique
+  password String
+  branchId Int
+  isVerified Boolean @default(false)
+  otp String?
+  otpExpiry DateTime?
+  status Status @default(ACTIVE)
+
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  branch Branch @relation(fields:[branchId],references:[id])
+  teacherGroups TeacherGroup[]
+  teacherGroupHistory TeacherGroupHistory[]
+
+  @@index([branchId,status])
+  @@index([email])
+}
+model TeacherGroup{
+  id Int @id @default(autoincrement())
+  teacherId Int
+  branchId Int
+  groupId Int
+  status Status @default(ACTIVE)
+
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  teacher Teacher @relation(fields:[teacherId],references:[id])
+  group Group @relation(fields:[groupId],references:[id])
+  branch Branch @relation(fields:[branchId],references:[id])
+
+  history TeacherGroupHistory[]
+
+  @@unique([teacherId,groupId,branchId])
+  @@index([teacherId,status])
+  @@index([groupId,status])
+
+  @@map("teacher_groups")
+
+}
+model TeacherGroupHistory{
+  id Int @id @default(autoincrement())
+  teacherGroupId Int
+  teacherId Int
+  groupId Int
+  event EventType
+  startDate DateTime
+  endDate DateTime?
+  createdAt DateTime @default(now())
+
+  teacherGroup TeacherGroup @relation(fields:[teacherGroupId],references:[id])
+  teacher Teacher @relation(fields:[teacherId],references:[id])
+  group Group @relation(fields:[groupId],references:[id])
+
+  @@map("teacher_group_history")
+  @@index([teacherGroupId])
+}
+model Student{
+  id Int @id @default(autoincrement())
+  fullName String
+  photo String?
+  email String @unique
+  phone String
+  password String
+  isVerified Boolean @default(false)
+  otp String?
+  otpExpiry DateTime?
+  status Status @default(ACTIVE)
+  branchId Int
+
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branch Branch @relation(fields:[branchId],references:[id])
+  groups StudentGroup[]
+  history StudentGroupHistory[]
+
+  @@index([branchId,status])
+  @@index([email])
+}
+model StudentGroup{
+  id Int @id @default(autoincrement())
+  studentId Int
+  groupId Int
+  branchId Int
+  status Status @default(ACTIVE)
+
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime? @updatedAt
+
+  group Group @relation(fields:[groupId],references:[id])
+  branch Branch @relation(fields:[branchId],references:[id])
+  student Student @relation(fields:[studentId],references:[id])
+
+  history StudentGroupHistory[]
+
+  @@unique([studentId,groupId,branchId])
+  @@index([studentId,status])
+  @@index([groupId,status])
+  @@map("student_groups")
+}
+model StudentGroupHistory{
+  id Int @id @default(autoincrement())
+  studentGroupId Int
+  studentId Int
+  groupId Int
+  event EventType
+  startDate DateTime
+  endDate DateTime?
+  createdAt DateTime @default(now())
+
+  studentGroup StudentGroup @relation(fields:[studentGroupId],references:[id])
+  student Student @relation(fields:[studentId],references:[id])
+  group Group @relation(fields:[groupId],references:[id])
+
+  @@map("student_group_history")
+  @@index([studentGroupId])
+}
+model Staff{
+  id Int @id @default(autoincrement())
+  fullName String
+  username String? @unique
+  phone String 
+  photo String?
+  password String?
+  role StaffRole
+  branchId Int?
+  status Status @default(ACTIVE)
+
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branch Branch? @relation(fields:[branchId],references:[id])
+  permissions Permission[]
+  @@index([branchId,role])
+  @@index([username])
+}
+model Permission{
+  id Int @id @default(autoincrement())
+  staffId Int
+  tableName String
+  canRead Boolean @default(false)
+  canWrite Boolean @default(false)
+  canUpdate Boolean @default(false)
+  canDelete Boolean @default(false)
+
+  staff Staff @relation(fields:[staffId],references:[id])
+
+  @@unique([staffId,tableName])
+  @@index([staffId])
+}
