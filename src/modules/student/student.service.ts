@@ -1,26 +1,60 @@
-import { Injectable } from '@nestjs/common';
-import { CreateStudentInput } from './dto/create-student.input';
-import { UpdateStudentInput } from './dto/update-student.input';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { CreateStudentDto } from './dto/create-student.dto';
+import { UpdateStudentDto } from './dto/update-student.dto';
+import { PrismaService } from '../../prisma/prisma.service';
+import { Student } from '@prisma/client';
 
 @Injectable()
 export class StudentService {
-  create(createStudentInput: CreateStudentInput) {
-    return 'This action adds a new student';
+  constructor(private readonly prisma: PrismaService) {}
+
+  async create(dto: CreateStudentDto): Promise<Student> {
+    return this.prisma.student.create({
+      data: dto,
+    });
   }
 
-  findAll() {
-    return `This action returns all student`;
+  async findAll(): Promise<Student[]> {
+    return this.prisma.student.findMany({
+      where: { deletedAt: null },
+      include: {
+        branch: true,
+        groups: {
+          include: { group: true },
+        },
+      },
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} student`;
+  async findOne(id: number): Promise<Student> {
+    const student = await this.prisma.student.findUnique({
+      where: { id },
+      include: {
+        branch: true,
+        groups: {
+          include: { group: true },
+        },
+      },
+    });
+    if (!student || student.deletedAt) {
+      throw new NotFoundException(`Student with id ${id} not found`);
+    }
+    return student;
   }
 
-  update(id: number, updateStudentInput: UpdateStudentInput) {
-    return `This action updates a #${id} student`;
+  async update(id: number, dto: UpdateStudentDto): Promise<Student> {
+    await this.findOne(id);
+    return this.prisma.student.update({
+      where: { id },
+      data: dto,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} student`;
+  async remove(id: number): Promise<Student> {
+    await this.findOne(id);
+    return this.prisma.student.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
   }
 }

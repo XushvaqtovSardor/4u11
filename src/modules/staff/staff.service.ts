@@ -1,26 +1,56 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateStaffDto } from './dto/create-staff.dto';
 import { UpdateStaffDto } from './dto/update-staff.dto';
+import { PrismaService } from '../../prisma/prisma.service';
+import { Staff } from '@prisma/client';
 
 @Injectable()
 export class StaffService {
-  create(createStaffDto: CreateStaffDto) {
-    return 'This action adds a new staff';
+  constructor(private readonly prisma: PrismaService) {}
+
+  async create(dto: CreateStaffDto): Promise<Staff> {
+    return this.prisma.staff.create({
+      data: dto,
+    });
   }
 
-  findAll() {
-    return `This action returns all staff`;
+  async findAll(): Promise<Staff[]> {
+    return this.prisma.staff.findMany({
+      where: { deletedAt: null },
+      include: {
+        branch: true,
+        permissions: true,
+      },
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} staff`;
+  async findOne(id: number): Promise<Staff> {
+    const staff = await this.prisma.staff.findUnique({
+      where: { id },
+      include: {
+        branch: true,
+        permissions: true,
+      },
+    });
+    if (!staff || staff.deletedAt) {
+      throw new NotFoundException(`Staff with id ${id} not found`);
+    }
+    return staff;
   }
 
-  update(id: number, updateStaffDto: UpdateStaffDto) {
-    return `This action updates a #${id} staff`;
+  async update(id: number, dto: UpdateStaffDto): Promise<Staff> {
+    await this.findOne(id);
+    return this.prisma.staff.update({
+      where: { id },
+      data: dto,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} staff`;
+  async remove(id: number): Promise<Staff> {
+    await this.findOne(id);
+    return this.prisma.staff.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
   }
 }

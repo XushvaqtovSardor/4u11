@@ -41,37 +41,3 @@ export class RoomController {
     return this.roomService.remove(id);
   }
 }
-
-  @Get()
-  findAll(): Promise<Room[]> {
-    return this.roomService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number): Promise<Room | null> {
-    return this.roomService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body()
-    dto: {
-      name?: string;
-      capacity?: number;
-      branchId?: number;
-      status?: Status;
-    },
-  ): Promise<Room> {
-    return this.roomService.update(+id, dto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: string): Promise<Room> {
-    return this.roomService.remove(+id);
-  }
-  @Delete(':id/hard')
-  delete(@Param('id', ParseIntPipe) id: string): Promise<Room> {
-    return this.roomService.delete(+id);
-  }
-}
