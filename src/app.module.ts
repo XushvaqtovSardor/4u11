@@ -6,9 +6,21 @@ import { RoomModule } from './modules/room/room.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { CourseModule } from './modules/course/course.module';
 import { GroupModule } from './modules/group/group.module';
+import { TeacherModule } from './modules/teacher/teacher.module';
+import { StudentModule } from './modules/student/student.module';
+import { StaffModule } from './modules/staff/staff.module';
 
 @Module({
-  imports: [PrismaModule, BranchModule, RoomModule, CourseModule, GroupModule],
+  imports: [
+    PrismaModule,
+    BranchModule,
+    RoomModule,
+    CourseModule,
+    GroupModule,
+    TeacherModule,
+    StudentModule,
+    StaffModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

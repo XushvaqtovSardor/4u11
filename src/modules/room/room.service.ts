@@ -1,53 +1,50 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { Room, Status } from 'prisma/generated';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
+import { Room } from '@prisma/client';
+import { CreateRoomDto } from './dto/create-room.dto';
+import { UpdateRoomDto } from './dto/update-room.dto';
 
 @Injectable()
 export class RoomService {
   constructor(private prisma: PrismaService) {}
-  create(data: {
-    name: string;
-    capacity: number;
-    branchId: number;
-    status?: Status;
-  }): Promise<Room> {
-    return this.prisma.room.create({ data });
+
+  async create(dto: CreateRoomDto): Promise<Room> {
+    return this.prisma.room.create({ data: dto });
   }
 
-  findAll(): Promise<Room[]> {
+  async findAll(): Promise<Room[]> {
     return this.prisma.room.findMany({
       where: { deletedAt: null },
       include: { branch: true, groups: true },
     });
   }
-  findOne(id: number): Promise<Room | null> {
-    return this.prisma.room.findUnique({
+
+  async findOne(id: number): Promise<Room> {
+    const room = await this.prisma.room.findUnique({
       where: { id },
       include: { branch: true, groups: true },
     });
+    if (!room || room.deletedAt) {
+      throw new NotFoundException(`Room with id ${id} not found`);\n    }
+    return room;
   }
-  update(
-    id: number,
-    data: {
-      name?: string;
-      capacity?: number;
-      branchId?: number;
-      status?: Status;
-    },
-  ): Promise<Room> {
+
+  async update(id: number, dto: UpdateRoomDto): Promise<Room> {
+    await this.findOne(id);
     return this.prisma.room.update({
       where: { id },
-      data,
+      data: dto,
     });
   }
 
-  remove(id: number): Promise<Room> {
+  async remove(id: number): Promise<Room> {
+    await this.findOne(id);
     return this.prisma.room.update({
       where: { id },
       data: { deletedAt: new Date() },
     });
   }
-  delete(id: number): Promise<Room> {
+}
     return this.prisma.room.delete({
       where: { id },
     });
