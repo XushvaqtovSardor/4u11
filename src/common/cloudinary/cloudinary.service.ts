@@ -15,7 +15,7 @@ export class CloudinaryService {
     return new Promise((resolve, reject) => {
       cloudinary.uploader
         .upload_stream({ folder: 'crm' }, (error, result) => {
-          if (error) return reject(error);
+          if (error) return reject(new Error(error.message || 'Upload failed'));
           if (!result) return reject(new Error('Upload failed'));
           resolve(result.secure_url);
         })
