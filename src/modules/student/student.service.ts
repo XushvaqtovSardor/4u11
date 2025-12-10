@@ -3,14 +3,19 @@ import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Student } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class StudentService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateStudentDto): Promise<Student> {
+    const hashedPassword = await bcrypt.hash(dto.password, 10);
     return this.prisma.student.create({
-      data: dto,
+      data: {
+        ...dto,
+        password: hashedPassword,
+      },
     });
   }
 

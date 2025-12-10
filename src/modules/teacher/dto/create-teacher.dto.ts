@@ -11,10 +11,6 @@ export class CreateTeacherDto {
   @IsString()
   fullName: string;
 
-  @IsOptional()
-  @IsString()
-  photo?: string;
-
   @IsEmail()
   email: string;
 

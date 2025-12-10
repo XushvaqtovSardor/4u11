@@ -129,6 +129,9 @@ model Teacher{
   email String @unique
   password String
   branchId Int
+  isVerified Boolean @default(false)
+  otp String?
+  otpExpiry DateTime?
   status Status @default(ACTIVE)
 
   deletedAt DateTime?
@@ -140,6 +143,7 @@ model Teacher{
   teacherGroupHistory TeacherGroupHistory[]
 
   @@index([branchId,status])
+  @@index([email])
 }
 model TeacherGroup{
   id Int @id @default(autoincrement())
@@ -188,6 +192,10 @@ model Student{
   photo String?
   email String @unique
   phone String
+  password String
+  isVerified Boolean @default(false)
+  otp String?
+  otpExpiry DateTime?
   status Status @default(ACTIVE)
   branchId Int
 
@@ -200,6 +208,7 @@ model Student{
   history StudentGroupHistory[]
 
   @@index([branchId,status])
+  @@index([email])
 }
 model StudentGroup{
   id Int @id @default(autoincrement())
@@ -243,8 +252,10 @@ model StudentGroupHistory{
 model Staff{
   id Int @id @default(autoincrement())
   fullName String
+  username String? @unique
   phone String 
   photo String?
+  password String?
   role StaffRole
   branchId Int?
   status Status @default(ACTIVE)
@@ -256,6 +267,7 @@ model Staff{
   branch Branch? @relation(fields:[branchId],references:[id])
   permissions Permission[]
   @@index([branchId,role])
+  @@index([username])
 }
 model Permission{
   id Int @id @default(autoincrement())

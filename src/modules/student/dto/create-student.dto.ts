@@ -11,12 +11,11 @@ export class CreateStudentDto {
   @IsString()
   fullName: string;
 
-  @IsOptional()
-  @IsString()
-  photo?: string;
-
   @IsEmail()
   email: string;
+
+  @IsString()
+  password: string;
 
   @IsString()
   phone: string;

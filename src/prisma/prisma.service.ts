@@ -9,7 +9,10 @@ export class PrismaService
   implements OnModuleDestroy, OnModuleInit
 {
   constructor() {
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const connectionString =
+      process.env.DATABASE_URL ||
+      'postgresql://postgres:postgres@localhost:5432/crm_2';
+    const pool = new Pool({ connectionString });
     const adapter = new PrismaPg(pool);
     super({
       adapter,
@@ -19,11 +22,9 @@ export class PrismaService
 
   async onModuleInit() {
     await this.$connect();
-    console.log('Prisma connected');
   }
 
   async onModuleDestroy() {
     await this.$disconnect();
-    console.log('Prisma disconnected');
   }
 }

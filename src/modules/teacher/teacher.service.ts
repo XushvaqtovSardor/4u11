@@ -14,7 +14,6 @@ export class TeacherService {
     return this.prisma.teacher.create({
       data: {
         fullName: dto.fullName,
-        photo: dto.photo,
         email: dto.email,
         password: hashedPassword,
         branchId: dto.branchId,
